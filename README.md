@@ -2,13 +2,13 @@
 
 As it stands by default, if you use Get-ADUser or Get-ADComputer... You have to do a bit of a complicated search to actually get the data you want. This module is meant to simplify that by providing a cleaner parameter based structure to search AD.
 
-# To-Do
+## To-Do
 
 - [ ] Fallback on ADSIEdit if Get-ADUser or Get-ADComputer are not found.
 
-# Command Help Files
+## Command Help Files
 
-## Search-ADUser
+### Search-ADUser
 
 ```powershell
 <#
@@ -54,7 +54,7 @@ As it stands by default, if you use Get-ADUser or Get-ADComputer... You have to 
 #>
 ```
 
-## Search-ADComputer
+### Search-ADComputer
 
 ```powershell
 <#
