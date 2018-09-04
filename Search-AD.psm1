@@ -50,10 +50,7 @@ function Search-ADUser {
         [switch]$Strict
     )
 
-    function New-UserDataObject {
-        param(
-            [Microsoft.ActiveDirectory.Management.ADUser]$UserData
-        )
+    function New-UserDataObject($UserData) {
 
         $returnObj = New-Object -TypeName pscustomobject
 
@@ -65,14 +62,21 @@ function Search-ADUser {
 
         Add-Member -InputObject $returnObj -MemberType MemberSet -Name PSStandardMembers -Value $CustomOutput
 
-        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "FirstName" -Value $user.GivenName
-        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "LastName" -Value $user.Surname
-        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "UserName" -Value $user.CN
-        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "Email" -Value $user.EmailAddress 
-        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "LastLogon" -Value $user.LastLogonDate
-        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "DistinguishedName" -Value $user.DistinguishedName
-        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "SID" -Value $user.SID
-        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "Groups" -Value $user.MemberOf
+        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "FirstName" -Value "$($UserData.givenname)"
+        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "LastName" -Value "$($UserData.sn)"
+        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "UserName" -Value "$($UserData.cn)"
+        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "Email" -Value "$($UserData.mail)"
+        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "LastLogon" -Value ([datetime]::FromFileTime("$($UserData.lastlogon)"))
+        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "DistinguishedName" -Value "$($UserData.distinguishedname)"
+
+        if (($UserData.objectsid | Get-Member).TypeName -eq "System.Security.Principal.SecurityIdentifier") {
+            Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "SID" -Value $UserData.objectsid
+        }
+        else {
+            Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "SID" -Value ([System.Security.Principal.SecurityIdentifier]"$((New-Object System.Security.Principal.SecurityIdentifier($UserData.objectsid[0], 0)).toString())")
+        }
+
+        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "Groups" -Value $UserData.memberof
 
         return $returnObj
     }
@@ -87,35 +91,63 @@ function Search-ADUser {
 
     $searchObjects = @()
     if ($FirstName) {
-        $searchObjects += @{"GivenName" = $FirstName}
+        $searchObjects += @{"givenname" = $FirstName}
     }
     if ($LastName) {
-        $searchObjects += @{"Surname" = $LastName}
+        $searchObjects += @{"sn" = $LastName}
     }
     if ($UserName) {
-        $searchObjects += @{"CN" = $UserName}
+        $searchObjects += @{"cn" = $UserName}
     }
     if ($Email) {
-        $searchObjects += @{"EmailAddress" = $Email}
+        $searchObjects += @{"userprinciplename" = $Email}
     }
 
-    $searchString = ""
-    $i = 1
+    try {
 
-    foreach ($obj in $searchObjects) {
-        $searchString += "$($obj.Keys) $($searchType) ""$($obj.Values)"""
+        Import-Module ActiveDirectory -ErrorAction Stop
 
-        if ($i -ne $searchObjects.Count) {
-            $searchString += " -and "
+        Write-Verbose "Using AD Module."
+
+        $searchString = ""
+        $i = 1
+
+        foreach ($obj in $searchObjects) {
+            $searchString += "$($obj.Keys) $($searchType) ""$($obj.Values)"""
+
+            if ($i -ne $searchObjects.Count) {
+                $searchString += " -and "
+            }
+            $i++
         }
-        $i++
-    }
 
-    $adSearch = Get-ADUser -Filter $searchString -Properties *
+        $adSearch = Get-ADUser -Filter $searchString -Properties *
+
+    }
+    catch {
+
+        Write-Verbose "Using ADSI."
+
+        if ($PSVersionTable.PSVersion.Major -ge 6) {
+            Import-Module PSCoreWindowsCompat -Force
+        }
+
+        $adsiDomain = New-Object -TypeName DirectoryServices.DirectorySearcher
+        $adsiDomain.Filter = '(&(objectCategory=user)'
+
+        foreach ($obj in $searchObjects) {
+            $adsiDomain.Filter += "($($obj.Keys)=$($obj.Values))"
+        }
+
+        $adsiDomain.Filter += ")"
+        
+        $adSearch = $adsiDomain.FindAll().Properties
+
+    }
 
     foreach ($user in $adSearch) {
 
-        New-UserDataObject -UserDate $user
+        New-UserDataObject($user)
 
     }
 
@@ -176,13 +208,26 @@ function Search-ADComputer {
 
         Add-Member -InputObject $returnObj -MemberType MemberSet -Name PSStandardMembers -Value $CustomOutput
 
-        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "ComputerName" -Value $CompData.Name
-        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "IP Address" -Value $CompData.IPv4Address
-        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "Operating System" -Value $CompData.OperatingSystem
-        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "OS Version" -Value $CompData.OperatingSystemVersion 
-        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "LastLogon" -Value $CompData.LastLogonDate
-        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "DistinguishedName" -Value $CompData.DistinguishedName
-        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "SID" -Value $CompData.SID
+        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "ComputerName" -Value "$($CompData.name)"
+
+        if ($CompData.IPv4Address) {
+            Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "IP Address" -Value $CompData.IPv4Address
+        }
+        else {
+            Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "IP Address" -Value ([system.net.dns]::GetHostEntry("$($CompData.dnshostname)").AddressList | Where-Object -Property "AddressFamily" -eq "InterNetwork" | Select-Object -First 1 -ExpandProperty "IPAddressToString")
+        }
+        
+        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "Operating System" -Value "$($CompData.operatingsystem)"
+        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "OS Version" -Value "$($CompData.operatingsystemversion)"
+        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "LastLogon" -Value ([datetime]::FromFileTime("$($CompData.lastlogon)"))
+        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "DistinguishedName" -Value "$($CompData.distinguishedname)"
+        
+        if (($CompData.objectsid | Get-Member).TypeName -eq "System.Security.Principal.SecurityIdentifier") {
+            Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "SID" -Value $CompData.objectsid
+        }
+        else {
+            Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "SID" -Value ([System.Security.Principal.SecurityIdentifier]"$((New-Object System.Security.Principal.SecurityIdentifier($CompData.objectsid[0], 0)).toString())")
+        }
 
         return $returnObj
     }
@@ -202,24 +247,48 @@ function Search-ADComputer {
         $searchObjects += @{"IPv4Address" = $IPAddress}
     }
 
-    $searchString = ""
-    $i = 1
+    try {
 
-    foreach ($obj in $searchObjects) {
-        if ($obj.Keys -ne "IPv4Address") {
+        Import-Module ActiveDirectory -ErrorAction Stop
+
+        Write-Verbose "Using AD Module."
+
+        $searchString = ""
+        $i = 1
+
+        foreach ($obj in $searchObjects) {
             $searchString += "$($obj.Keys) $($searchType) ""$($obj.Values)"""
+
+            if ($i -ne $searchObjects.Count) {
+                $searchString += " -and "
+            }
+            $i++
         }
-        else {
-            $searchString += "$($obj.Keys) -eq ""$($obj.Values)"""
+
+        $adSearch = Get-ADComputer -Filter $searchString -Properties *
+
+    }
+    catch {
+
+        Write-Verbose "Using ADSI."
+
+        if ($PSVersionTable.PSVersion.Major -ge 6) {
+            Import-Module PSCoreWindowsCompat -Force
         }
-            
-        if ($i -ne $searchObjects.Count) {
-            $searchString += " -and "
+
+        $adsiDomain = New-Object -TypeName DirectoryServices.DirectorySearcher
+        $adsiDomain.Filter = '(&(objectCategory=computer)'
+
+        foreach ($obj in $searchObjects) {
+            $adsiDomain.Filter += "($($obj.Keys)=$($obj.Values))"
         }
-        $i++
+
+        $adsiDomain.Filter += ")"
+        
+        $adSearch = $adsiDomain.FindAll().Properties
+
     }
 
-    $adSearch = Get-ADComputer -Filter $searchString -Properties *
 
     foreach ($comp in $adSearch) {
 
