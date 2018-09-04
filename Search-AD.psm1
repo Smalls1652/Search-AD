@@ -206,8 +206,13 @@ function Search-ADComputer {
     $i = 1
 
     foreach ($obj in $searchObjects) {
-        $searchString += "$($obj.Keys) $($searchType) ""$($obj.Values)"""
-
+        if ($obj.Keys -ne "IPv4Address") {
+            $searchString += "$($obj.Keys) $($searchType) ""$($obj.Values)"""
+        }
+        else {
+            $searchString += "$($obj.Keys) -eq ""$($obj.Values)"""
+        }
+            
         if ($i -ne $searchObjects.Count) {
             $searchString += " -and "
         }
