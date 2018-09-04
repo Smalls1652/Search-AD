@@ -1,6 +1,4 @@
-function Search-ADUser {
-
-    <#
+<#
         .SYNOPSIS
         Search for users in your Active Directory domain.
 
@@ -24,7 +22,24 @@ function Search-ADUser {
 
         .EXAMPLE
         Search-ADUser -FirstName "John" -LastName "Doe"
+
+        FirstName LastName UserName   Email
+        --------- -------- --------   -----
+        John      Doe      jdoe123    jdoe123@example.com
+
+        .EXAMPLE
+        Search-ADUser -FirstName "John" -LastName "Doe" | Select-Object -Property *
+
+        FirstName         : John
+        LastName          : Doe
+        UserName          : jdoe123
+        Email             : jdoe123@example.com
+        LastLogon         : 9/4/2018 8:16:10 AM
+        DistinguishedName : CN=jdoe123,CN=UsersDC=ad,DC=nashcc,DC=edu
+        SID               : 
+        Groups            : {CN=Domain Users,CN=Users,DC=ad,DC=example,DC=com}
 #>
+function Search-ADUser {
 
     [cmdletbinding()]
     param(
@@ -86,7 +101,7 @@ function Search-ADUser {
 
     $searchString = ""
     $i = 1
-    
+
     foreach ($obj in $searchObjects) {
         $searchString += "$($obj.Keys) $($searchType) ""$($obj.Values)"""
 
