@@ -60,6 +60,7 @@ function Search-ADUser {
 
     $searchString = ""
     $i = 1
+    
     foreach ($obj in $searchObjects) {
         $searchString += "$($obj.Keys) $($searchType) ""$($obj.Values)"""
 
