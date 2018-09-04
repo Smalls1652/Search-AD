@@ -4,7 +4,7 @@ As it stands by default, if you use Get-ADUser or Get-ADComputer... You have to 
 
 # To-Do
 
-- [] Fallback on ADSIEdit if Get-ADUser or Get-ADComputer are not found.
+- [ ] Fallback on ADSIEdit if Get-ADUser or Get-ADComputer are not found.
 
 # Command Help Files
 
