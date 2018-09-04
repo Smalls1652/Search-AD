@@ -6,6 +6,6 @@
     CompanyName = 'Smalls'
     Copyright = '(c) Tim Small. All rights reserved.'
     Description = 'Search AD for specific users, computers, and more.'
-    FunctionsToExport = 'Search-ADUser'
+    FunctionsToExport = '*'
     CmdletsToExport = '*'
     }    
