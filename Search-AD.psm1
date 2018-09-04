@@ -1,5 +1,31 @@
 function Search-ADUser {
 
+    <#
+        .SYNOPSIS
+        Search for users in your Active Directory domain.
+
+        .DESCRIPTION
+        Search for users in your Active Directory domain and return the data in a quick and readable format that helpdesk users can use.
+
+        .PARAMETER FirstName
+        The first name of the user (Referred to as the GivenName in AD).
+
+        .PARAMETER LastName
+        The last name of the user (Referred to as the Surname in AD).
+
+        .PARAMETER UserName
+        The username of the user (Referred to as CN in AD).
+
+        .PARAMETER Email
+        The email address of the user (Referred to as EmailAddress in AD).
+
+        .PARAMETER Strict
+        Set this switch to make the search strict based. By default -like is used in the search.
+
+        .EXAMPLE
+        Search-ADUser -FirstName "John" -LastName "Doe"
+#>
+
     [cmdletbinding()]
     param(
         [string]$FirstName,
