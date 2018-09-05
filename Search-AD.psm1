@@ -67,6 +67,7 @@ function Search-ADUser {
         Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "UserName" -Value "$($UserData.cn)"
         Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "Email" -Value "$($UserData.mail)"
         Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "LastLogon" -Value ([datetime]::FromFileTime("$($UserData.lastlogon)"))
+        Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "PasswordLastSet" -Value ([datetime]::FromFileTime("$($UserData.pwdlastset)"))
         Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "DistinguishedName" -Value "$($UserData.distinguishedname)"
 
         if (($UserData.objectsid | Get-Member).TypeName -eq "System.Security.Principal.SecurityIdentifier") {
@@ -214,7 +215,14 @@ function Search-ADComputer {
             Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "IP Address" -Value $CompData.IPv4Address
         }
         else {
-            Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "IP Address" -Value ([system.net.dns]::GetHostEntry("$($CompData.dnshostname)").AddressList | Where-Object -Property "AddressFamily" -eq "InterNetwork" | Select-Object -First 1 -ExpandProperty "IPAddressToString")
+            try {
+                $ipaddrRequest = ([system.net.dns]::GetHostEntry("$($CompData.dnshostname)")).AddressList | Where-Object -Property "AddressFamily" -eq "InterNetwork" | Select-Object -First 1 -ExpandProperty "IPAddressToString"
+            }
+            catch {
+                $ipaddrRequest = ""
+            }
+
+            Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "IP Address" -Value $ipaddrRequest
         }
         
         Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "Operating System" -Value "$($CompData.operatingsystem)"
