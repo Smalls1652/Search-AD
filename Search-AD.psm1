@@ -56,7 +56,7 @@ function Search-ADUser {
 
         $returnObj.PSObject.TypeNames.Insert(0, "Search.ActiveDirectory.Users")
 
-        $defaultOutput = "FirstName", "LastName", "UserName", "Email"
+        $defaultOutput = "FirstName", "LastName", "UserName", "Email", "PasswordLastSet"
         $defaultPropertSet = New-Object System.Management.Automation.PSPropertySet("DefaultDisplayPropertySet", [string[]]$defaultOutput)
         $CustomOutput = [System.Management.Automation.PSMemberInfo[]]@($defaultPropertSet)
 
