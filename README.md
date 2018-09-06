@@ -2,6 +2,15 @@
 
 As it stands by default, if you use Get-ADUser or Get-ADComputer... You have to do a bit of a complicated search to actually get the data you want. This module is meant to simplify that by providing a cleaner parameter based structure to search AD.
 
+## Requirements
+
+This script should work out of the box for PowerShell 5.1 on Windows 10; however, **PowerShell Core** will require an external module to be installed called PSCoreWindowsCompat. This is to bring back ADSI functionality for **PowerShell Core**. *This is not required for PowerShell 5.1!*
+
+To install it, run this on your **PowerShell Core** console:
+```powershell
+Install-Module PSCoreWindowsCompat -Scope CurrentUser
+```
+
 ## To-Do
 
 - [x] Fallback on ADSI if Get-ADUser or Get-ADComputer are not found.
