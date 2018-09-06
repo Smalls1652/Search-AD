@@ -4,7 +4,7 @@ As it stands by default, if you use Get-ADUser or Get-ADComputer... You have to 
 
 ## Requirements
 
-This script should work out of the box for PowerShell 5.1 on Windows 10; however, **PowerShell Core** will require an external module to be installed called PSCoreWindowsCompat. This is to bring back ADSI functionality for **PowerShell Core**. *This is not required for PowerShell 5.1!*
+This script should work out of the box for PowerShell 5.1 on Windows 10; however, **PowerShell Core** will require an external module to be installed called [PSCoreWindowsCompat](https://github.com/markekraus/PSCoreWindowsCompat). This is to bring back ADSI functionality for **PowerShell Core**. *This is not required for PowerShell 5.1!*
 
 To install it, run this on your **PowerShell Core** console:
 ```powershell
