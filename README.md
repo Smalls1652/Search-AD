@@ -4,7 +4,10 @@ As it stands by default, if you use Get-ADUser or Get-ADComputer... You have to 
 
 ## To-Do
 
-- [ ] Fallback on ADSIEdit if Get-ADUser or Get-ADComputer are not found.
+- [x] Fallback on ADSI if Get-ADUser or Get-ADComputer are not found.
+- [ ] Add IP address searching through ADSI.
+- [ ] Remove the -Strict parameter.
+- [ ] Create .ps1xml file for formatting the output as a table by default.
 
 ## Command Help Files
 
