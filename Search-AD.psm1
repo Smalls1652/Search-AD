@@ -46,8 +46,7 @@ function Search-ADUser {
         [string]$FirstName,
         [string]$LastName,
         [string]$UserName,
-        [string]$Email,
-        [switch]$Strict
+        [string]$Email
     )
 
     function New-UserDataObject($UserData) {
@@ -84,14 +83,8 @@ function Search-ADUser {
         return $returnObj
     }
 
-    if ($Strict) {
-        $searchType = "-eq"
-    }
-    else {
-        $searchType = "-like"
-    }
-
-
+    $searchType = "-like"
+    
     $searchObjects = @()
     if ($FirstName) {
         $searchObjects += @{"givenname" = $FirstName}
@@ -195,8 +188,7 @@ function Search-ADComputer {
     [cmdletbinding()]
     param(
         [string]$ComputerName,
-        [string]$IPAddress,
-        [switch]$Strict
+        [string]$IPAddress
     )
 
     function New-ComputerDataObject($CompData) {
@@ -244,12 +236,7 @@ function Search-ADComputer {
         return $returnObj
     }
 
-    if ($Strict) {
-        $searchType = "-eq"
-    }
-    else {
-        $searchType = "-like"
-    }
+    $searchType = "-like"
 
 
     $searchObjects = @()
