@@ -83,8 +83,10 @@ function Search-ADUser {
         return $returnObj
     }
 
+    Write-Verbose "Setting search type to '-like'."
     $searchType = "-like"
     
+    Write-Verbose "Creating searchObjects array."
     $searchObjects = @()
     if ($FirstName) {
         $searchObjects += @{"givenname" = $FirstName}
@@ -100,6 +102,8 @@ function Search-ADUser {
     }
 
     try {
+
+        Write-Verbose "Trying to load Active Directory module..."
 
         Import-Module ActiveDirectory -ErrorAction Stop
 
@@ -117,17 +121,21 @@ function Search-ADUser {
             $i++
         }
 
+        Write-Verbose "Filter set to '$($searchString)'."
+
         $adSearch = Get-ADUser -Filter $searchString -Properties *
 
     }
     catch {
-
+        Write-Verbose "Active Directory module missing..."
         Write-Verbose "Using ADSI."
 
         if ($PSVersionTable.PSVersion.Major -ge 6) {
+            Write-Verbose "PowerShell Core detected, loading PSCoreWindowsCompat."
             Import-Module PSCoreWindowsCompat -Force
         }
 
+        Write-Verbose "Loading ADSI object."
         $adsiDomain = New-Object -TypeName DirectoryServices.DirectorySearcher
         $adsiDomain.Filter = '(&(objectCategory=user)'
 
@@ -136,6 +144,8 @@ function Search-ADUser {
         }
 
         $adsiDomain.Filter += ")"
+
+        Write-Verbose "Filter set to '$($adsiDomain.Filter)'."
         
         $adSearch = $adsiDomain.FindAll().Properties
 
@@ -236,17 +246,19 @@ function Search-ADComputer {
         return $returnObj
     }
 
+    Write-Verbose "Setting search type to '-like'."
     $searchType = "-like"
 
-
-    $searchObjects = @()
-
     try {
+
+        Write-Verbose "Trying to load Active Directory module..."
 
         Import-Module ActiveDirectory -ErrorAction Stop
 
         Write-Verbose "Using AD Module."
 
+        Write-Verbose "Creating searchObjects array."
+        $searchObjects = @()
         if ($ComputerName) {
             $searchObjects += @{"Name" = $ComputerName}
         }
@@ -266,19 +278,26 @@ function Search-ADComputer {
             $i++
         }
 
+        Write-Verbose "Filter set to '$($searchString)'."
+
         $adSearch = Get-ADComputer -Filter $searchString -Properties *
 
     }
     catch {
 
+        Write-Verbose "Active Directory module missing..."
         Write-Verbose "Using ADSI."
 
         if ($PSVersionTable.PSVersion.Major -ge 6) {
+            Write-Verbose "PowerShell Core detected, loading PSCoreWindowsCompat."
             Import-Module PSCoreWindowsCompat -Force
         }
 
+        Write-Verbose "Converting IP Address to hostname."
         $IPAddress = [System.Net.Dns]::GetHostByAddress($IPAddress) | Select-Object -ExpandProperty "HostName"
 
+        Write-Verbose "Creating searchObjects array."
+        $searchObjects = @()
         if ($ComputerName) {
             $searchObjects += @{"Name" = $ComputerName}
         }
@@ -286,6 +305,7 @@ function Search-ADComputer {
             $searchObjects += @{"dnshostname" = $IPAddress}
         }
 
+        Write-Verbose "Loading ADSI object."
         $adsiDomain = New-Object -TypeName DirectoryServices.DirectorySearcher
         $adsiDomain.Filter = '(&(objectCategory=computer)'
 
@@ -295,6 +315,8 @@ function Search-ADComputer {
 
         $adsiDomain.Filter += ")"
         
+        Write-Verbose "Filter set to '$($adsiDomain.Filter)'."
+
         $adSearch = $adsiDomain.FindAll().Properties
 
     }
