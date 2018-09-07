@@ -251,19 +251,21 @@ function Search-ADComputer {
         $searchType = "-like"
     }
 
+
     $searchObjects = @()
-    if ($ComputerName) {
-        $searchObjects += @{"Name" = $ComputerName}
-    }
-    if ($IPAddress) {
-        $searchObjects += @{"IPv4Address" = $IPAddress}
-    }
 
     try {
 
         Import-Module ActiveDirectory -ErrorAction Stop
 
         Write-Verbose "Using AD Module."
+
+        if ($ComputerName) {
+            $searchObjects += @{"Name" = $ComputerName}
+        }
+        if ($IPAddress) {
+            $searchObjects += @{"IPv4Address" = $IPAddress}
+        }
 
         $searchString = ""
         $i = 1
@@ -286,6 +288,15 @@ function Search-ADComputer {
 
         if ($PSVersionTable.PSVersion.Major -ge 6) {
             Import-Module PSCoreWindowsCompat -Force
+        }
+
+        $IPAddress = [System.Net.Dns]::GetHostByAddress($IPAddress) | Select-Object -ExpandProperty "HostName"
+
+        if ($ComputerName) {
+            $searchObjects += @{"Name" = $ComputerName}
+        }
+        if ($IPAddress) {
+            $searchObjects += @{"dnshostname" = $IPAddress}
         }
 
         $adsiDomain = New-Object -TypeName DirectoryServices.DirectorySearcher
