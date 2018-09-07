@@ -14,9 +14,10 @@ Install-Module PSCoreWindowsCompat -Scope CurrentUser
 ## To-Do
 
 - [x] Fallback on ADSI if Get-ADUser or Get-ADComputer are not found.
-- [ ] Add IP address searching through ADSI.
-- [ ] Remove the -Strict parameter.
+- [x] Add IP address searching through ADSI.
+- [x] Remove the -Strict parameter.
 - [x] Create .ps1xml file for formatting the output as a table by default.
+- [x] Added verbose logging when -Verbose is utilized. 
 
 ## Command Help Files
 
