@@ -52,9 +52,9 @@ function Search-ADUser {
 
     function New-UserDataObject($UserData) {
 
-        $returnObj = New-Object -TypeName pscustomobject
+        Update-FormatData -AppendPath "$($PSScriptRoot)\Search-ADUser.Format.ps1xml"
 
-        $returnObj.PSObject.TypeNames.Insert(0, "Search.ActiveDirectory.Users")
+        $returnObj = New-Object -TypeName pscustomobject
 
         $defaultOutput = "FirstName", "LastName", "UserName", "Email", "PasswordLastSet"
         $defaultPropertSet = New-Object System.Management.Automation.PSPropertySet("DefaultDisplayPropertySet", [string[]]$defaultOutput)
@@ -78,6 +78,8 @@ function Search-ADUser {
         }
 
         Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "Groups" -Value $UserData.memberof
+
+        Add-Member -InputObject $returnObj -TypeName Search.ActiveDirectory.Users
 
         return $returnObj
     }
@@ -201,7 +203,7 @@ function Search-ADComputer {
 
         $returnObj = New-Object -TypeName pscustomobject
 
-        $returnObj.PSObject.TypeNames.Insert(0, "Search.ActiveDirectory.Computers")
+        Update-FormatData -AppendPath "$($PSScriptRoot)\Search-ADComputer.Format.ps1xml"
 
         $defaultOutput = "ComputerName", "IP Address", "Operating System", "LastLogon"
         $defaultPropertSet = New-Object System.Management.Automation.PSPropertySet("DefaultDisplayPropertySet", [string[]]$defaultOutput)
@@ -236,6 +238,8 @@ function Search-ADComputer {
         else {
             Add-Member -InputObject $returnObj -MemberType NoteProperty -Name "SID" -Value ([System.Security.Principal.SecurityIdentifier]"$((New-Object System.Security.Principal.SecurityIdentifier($CompData.objectsid[0], 0)).toString())")
         }
+
+        Add-Member -InputObject $returnObj -TypeName Search.ActiveDirectory.Computers
 
         return $returnObj
     }
